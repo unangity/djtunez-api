@@ -1,0 +1,47 @@
+{
+  "name": "gocinema-webapi",
+  "version": "1.0.0",
+  "engines": {
+    "npm": ">=10",
+    "node": ">=22"
+  },
+  "description": "API for gocinema client dashboards",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo 'test'",
+    "dev": "concurrently \"tsc --watch\" \"nodemon -q dist/app.js\"",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Antgap/djtunez-api.git"
+  },
+  "keywords": [
+    "djtunez",
+    "music"
+  ],
+  "author": "Itoro Unang",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Antgap/djtunez-api/issues"
+  },
+  "homepage": "https://github.com/Antgap/djtunez-api#readme",
+  "dependencies": {
+    "@fastify/cors": "^10.0.1",
+    "dotenv": "^17.2.3",
+    "fastify": "^5.1.0",
+    "firebase-admin": "^13.6.0",
+    "joi": "^17.13.3"
+  },
+  "devDependencies": {
+    "@fastify/swagger": "^9.6.1",
+    "@fastify/swagger-ui": "^5.2.3",
+    "@types/node": "^22.19.1",
+    "concurrently": "^8.2.2",
+    "dotenv-cli": "^11.0.0",
+    "joi-to-json": "^5.0.0",
+    "nodemon": "^3.1.4",
+    "typescript": "^5.5.4"
+  }
+}

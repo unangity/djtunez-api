@@ -1,0 +1,7 @@
+*.log
+*.tsbuildinfo
+.dockerignore
+.git/
+.gitignore
+.vscode/
+/config
