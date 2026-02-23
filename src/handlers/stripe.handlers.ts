@@ -5,7 +5,7 @@ import { httpStatusMap } from "../utils/http-status-map";
 // Initialise Stripe with your platform's secret key.
 // Set STRIPE_SECRET_KEY in the API .env file.
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-01-27.acacia",
+  apiVersion: "2026-01-28.clover",
 });
 
 // ========= types =========

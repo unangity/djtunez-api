@@ -1,6 +1,8 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { httpStatusMap } from "../utils/http-status-map";
-import { rtdb } from "../db/rtdb";
+import DB from "../db";
+
+const db = new DB()
 
 // ========= types =========
 
@@ -45,7 +47,7 @@ export const get_event = async (
 ) => {
   const { id } = request.params;
   try {
-    const snapshot = await rtdb.ref(`/events/${id}`).once("value");
+    const snapshot = await db.rtdb.ref(`/events/${id}`).once("value");
     if (!snapshot.exists()) {
       return reply
         .code(httpStatusMap.notFound)
@@ -90,7 +92,7 @@ export const get_dj = async (
 ) => {
   const { id } = request.params;
   try {
-    const snapshot = await rtdb.ref(`/djs/${id}`).once("value");
+    const snapshot = await db.rtdb.ref(`/djs/${id}`).once("value");
     if (!snapshot.exists()) {
       return reply
         .code(httpStatusMap.notFound)
@@ -139,7 +141,7 @@ export const submit_song_request = async (
 
   try {
     // Verify the event exists
-    const eventSnap = await rtdb.ref(`/events/${eventId}`).once("value");
+    const eventSnap = await db.rtdb.ref(`/events/${eventId}`).once("value");
     if (!eventSnap.exists()) {
       return reply
         .code(httpStatusMap.notFound)
@@ -147,14 +149,14 @@ export const submit_song_request = async (
     }
 
     // Determine queue position (append to end)
-    const queueSnap = await rtdb
+    const queueSnap = await db.rtdb
       .ref(`/events/${eventId}/queue`)
       .once("value");
     const queueData = queueSnap.val();
     const position = queueData ? Object.keys(queueData).length : 0;
 
     // Push the new request — Firebase generates a unique key
-    const newRef = rtdb.ref(`/events/${eventId}/queue`).push();
+    const newRef = db.rtdb.ref(`/events/${eventId}/queue`).push();
     const requestId = newRef.key!;
 
     await newRef.set({

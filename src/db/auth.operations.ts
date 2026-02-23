@@ -1,6 +1,4 @@
 import { auth, auth as firebaseAuth } from "firebase-admin";
-import { AuthenticatedUser } from "../constants";
-import { Role } from "../constants";
 import { UserIdentifier } from "firebase-admin/lib/auth/identifier";
 
 export default class Auth {
@@ -37,28 +35,4 @@ export default class Auth {
     return this._auth.deleteUser(userID);
   }
 
-  async register(
-    authenticatedUser: AuthenticatedUser,
-    email: string,
-    password: string,
-    role: Role = Role.staff
-  ) {
-    const roleAllowed: { [key: string]: Role[] } = {
-      admin: [Role.manager, Role.staff],
-      manager: [Role.staff],
-    };
-
-    if (!roleAllowed[authenticatedUser.role]?.includes(role)) {
-      return { success: false, data: "Unauthorized" };
-    }
-    const userRecord = await this._auth.createUser({ email, password });
-    if (userRecord) {
-      await this._auth.setCustomUserClaims(userRecord.uid, {
-        role: role,
-        needsPasswordChange: true,
-      });
-      return { success: true, data: userRecord.uid };
-    }
-    return { success: false, data: "User registration failed" };
-  }
 }

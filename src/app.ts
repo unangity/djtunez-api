@@ -81,7 +81,7 @@ server.register(cors, {
   },
 });
 
-if (process.env.GOOGLE_CLOUD_PROJECT !== undefined) {
+if (process.env.NODE_ENV === "production") {
   host = `https://${process.env.GOOGLE_CLOUD_PROJECT}.ey.r.appspot.com`;
 }
 
