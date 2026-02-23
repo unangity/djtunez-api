@@ -63,3 +63,19 @@ export const submitSongRequestResponseSchema = Joi.object({
   message: Joi.string().required(),
   requestId: Joi.string().required(),
 });
+
+export const createSongCheckoutSchema = Joi.object({
+  djId: Joi.string().min(1).required(),
+  eventId: Joi.string().min(1).required(),
+  title: Joi.string().min(1).max(200).required(),
+  artist: Joi.string().min(1).max(200).required(),
+  cover: Joi.string().uri().required(),
+  requesterEmail: Joi.string().email().required(),
+  successUrl: Joi.string().uri().required(),
+  cancelUrl: Joi.string().uri().required(),
+});
+
+export const createSongCheckoutResponseSchema = Joi.object({
+  url: Joi.string().uri().required(),
+  sessionId: Joi.string().required(),
+});

@@ -1,9 +1,12 @@
 import Joi from "joi";
 
 export const createPaymentIntentSchema = Joi.object({
-  trackId: Joi.string().min(1).required(),
   djId: Joi.string().min(1).required(),
-  email: Joi.string().email().required(),
+  eventId: Joi.string().min(1).required(),
+  title: Joi.string().min(1).max(200).required(),
+  artist: Joi.string().min(1).max(200).required(),
+  cover: Joi.string().uri().required(),
+  requesterEmail: Joi.string().email().required(),
 });
 
 export const createPaymentIntentResponseSchema = Joi.object({

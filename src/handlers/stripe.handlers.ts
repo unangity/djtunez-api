@@ -22,12 +22,22 @@ type CreateProductBody = {
 };
 type ListProductsQuery = { connectedAccountId?: string };
 type RequestPayoutBody = { accountId: string; amount: number; currency: string };
+type CheckoutMetadata = {
+  eventId: string;
+  title: string;
+  artist: string;
+  cover: string;
+  requesterEmail: string;
+  amount: string; // major unit as string, e.g. "2.99"
+  currency: string;
+};
 type CreateCheckoutBody = {
   priceId: string;
   connectedAccountId: string;
   applicationFeePercent?: number;
   successUrl: string;
   cancelUrl: string;
+  metadata: CheckoutMetadata;
 };
 
 // ========= handlers =========
@@ -115,7 +125,7 @@ export const get_onboarding_link = async (
 
 /**
  * POST /api/stripe/products
- * Create a product + price tier (e.g. "1 Song Request — €2.99").
+ * Create a product + price tier (e.g. "1 Song Request - €2.99").
  * Amount is in major currency units (e.g. 2.99); converted to cents internally.
  */
 export const create_product = async (
@@ -261,6 +271,7 @@ export const create_checkout_session = async (
     applicationFeePercent,
     successUrl,
     cancelUrl,
+    metadata,
   } = request.body;
   try {
     let applicationFeeAmount: number | undefined;
@@ -275,6 +286,8 @@ export const create_checkout_session = async (
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       line_items: [{ price: priceId, quantity: 1 }],
+      customer_email: metadata.requesterEmail,
+      metadata,
       payment_intent_data: {
         application_fee_amount: applicationFeeAmount,
         transfer_data: { destination: connectedAccountId },

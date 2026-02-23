@@ -13,15 +13,15 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
  * DELETE /api/user/me
  *
  * Cascade-deletes a DJ's account server-side using the Firebase Admin SDK.
- * Auth is enforced by the djRoutes hook — request.authenticatedUser
+ * Auth is enforced by the djRoutes hook - request.authenticatedUser
  * is guaranteed to be set by the time this handler runs.
  *
  * Deletion order:
  *   1. Read stripe accountId + event IDs from RTDB (before any data is wiped)
  *   2. Delete Stripe connected account (if one exists)
  *   3. Delete /events/{eventId} queue/history nodes (keyed by event, not uid)
- *   4. Delete /users/{uid} — profile, stripe, planned events, all-time history
- *   5. Delete Firebase Auth user — revokes all tokens last so RTDB ops stay valid
+ *   4. Delete /users/{uid} - profile, stripe, planned events, all-time history
+ *   5. Delete Firebase Auth user - revokes all tokens last so RTDB ops stay valid
  *
  * The client must call signOut() after this succeeds to clear its local state.
  */

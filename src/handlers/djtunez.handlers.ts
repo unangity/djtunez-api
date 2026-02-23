@@ -1,8 +1,12 @@
 import { FastifyReply, FastifyRequest } from "fastify";
+import Stripe from "stripe";
 import { httpStatusMap } from "../utils/http-status-map";
 import DB from "../db";
 
-const db = new DB()
+const db = new DB();
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: "2026-01-28.clover",
+});
 
 // ========= types =========
 
@@ -155,7 +159,7 @@ export const submit_song_request = async (
     const queueData = queueSnap.val();
     const position = queueData ? Object.keys(queueData).length : 0;
 
-    // Push the new request — Firebase generates a unique key
+    // Push the new request - Firebase generates a unique key
     const newRef = db.rtdb.ref(`/events/${eventId}/queue`).push();
     const requestId = newRef.key!;
 
@@ -178,5 +182,104 @@ export const submit_song_request = async (
     reply
       .code(httpStatusMap.internalServerError)
       .send({ error: "Failed to submit song request" });
+  }
+};
+
+export type CreateSongCheckoutBody = {
+  djId: string;
+  eventId: string;
+  title: string;
+  artist: string;
+  cover: string;
+  requesterEmail: string;
+  successUrl: string;
+  cancelUrl: string;
+};
+
+/**
+ * POST /api/djtunez/checkout
+ *
+ * Creates a Stripe Checkout Session for a fan's song request.
+ * Reads the DJ's price and Stripe account ID from RTDB server-side,
+ * so the web-ui never needs direct access to Stripe account IDs.
+ *
+ * The webhook (checkout.session.completed) writes the song request
+ * to the queue once Stripe confirms payment.
+ */
+export const create_song_checkout = async (
+  request: FastifyRequest<{ Body: CreateSongCheckoutBody }>,
+  reply: FastifyReply
+) => {
+  const {
+    djId,
+    eventId,
+    title,
+    artist,
+    cover,
+    requesterEmail,
+    successUrl,
+    cancelUrl,
+  } = request.body;
+
+  try {
+    const [profileSnap, stripeSnap] = await Promise.all([
+      db.rtdb.ref(`/users/${djId}/profile`).once("value"),
+      db.rtdb.ref(`/users/${djId}/stripe`).once("value"),
+    ]);
+
+    if (!profileSnap.exists()) {
+      return reply
+        .code(httpStatusMap.notFound)
+        .send({ error: "DJ not found" });
+    }
+
+    const profile = profileSnap.val();
+    const stripeData = stripeSnap.val();
+
+    if (!stripeData?.accountId) {
+      return reply
+        .code(httpStatusMap.badRequest)
+        .send({ error: "DJ has not connected a Stripe account" });
+    }
+
+    const price: number = profile.price ?? 0;
+    const currency: string = profile.currency ?? "eur";
+
+    const session = await stripe.checkout.sessions.create({
+      mode: "payment",
+      line_items: [
+        {
+          price_data: {
+            currency,
+            unit_amount: Math.round(price * 100),
+            product_data: { name: `Song Request - ${title}` },
+          },
+          quantity: 1,
+        },
+      ],
+      customer_email: requesterEmail,
+      metadata: {
+        eventId,
+        title,
+        artist,
+        cover,
+        requesterEmail,
+        amount: String(price),
+        currency,
+      },
+      payment_intent_data: {
+        transfer_data: { destination: stripeData.accountId },
+      },
+      success_url: successUrl,
+      cancel_url: cancelUrl,
+    });
+
+    reply
+      .code(httpStatusMap.created)
+      .send({ url: session.url!, sessionId: session.id });
+  } catch (error: any) {
+    reply
+      .code(httpStatusMap.internalServerError)
+      .send({ error: error.message ?? "Failed to create checkout session" });
   }
 };

@@ -39,6 +39,17 @@ export const createCheckoutSessionSchema = Joi.object({
   applicationFeePercent: Joi.number().min(0).max(100),
   successUrl: Joi.string().uri().required(),
   cancelUrl: Joi.string().uri().required(),
+  // Song request metadata - stored on the session so the webhook can write
+  // the request to the RTDB queue when checkout.session.completed fires.
+  metadata: Joi.object({
+    eventId:        Joi.string().required(),
+    title:          Joi.string().required(),
+    artist:         Joi.string().required(),
+    cover:          Joi.string().allow(""),
+    requesterEmail: Joi.string().email().required(),
+    amount:         Joi.string().required(), // major unit as string (e.g. "2.99")
+    currency:       Joi.string().min(2).max(5).lowercase().required(),
+  }).required(),
 });
 
 export const requestPayoutSchema = Joi.object({

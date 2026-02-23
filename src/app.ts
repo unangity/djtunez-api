@@ -92,7 +92,9 @@ server.get("/health", async (request, reply) => {
 // All routes registered through app.router.ts
 server.register(router, { prefix: "/api" });
 
-server.listen({ port }, (err) => {
+// Bind to 0.0.0.0 so the server is reachable from other devices on the
+// same network (physical Android/iOS device via WiFi, Firebase emulators, etc.)
+server.listen({ port, host: "0.0.0.0" }, (err) => {
   if (err) {
     console.error(err);
     process.exit(1);

@@ -6,9 +6,9 @@ import {
 } from "../schemas/spotify.schema";
 
 /**
- * Public Spotify routes — no auth required.
+ * Public Spotify routes - no auth required.
  *
- * GET /api/spotify/token — exchange client credentials for a Spotify access token
+ * GET /api/spotify/token - exchange client credentials for a Spotify access token
  */
 export default (
   router: FastifyInstance,
