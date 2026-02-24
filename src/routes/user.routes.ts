@@ -12,6 +12,6 @@ export default (
   opts: FastifyPluginOptions,
   done: () => void
 ) => {
-  router.delete("", {}, delete_account);
+  router.delete("/", {}, delete_account);
   done();
 };

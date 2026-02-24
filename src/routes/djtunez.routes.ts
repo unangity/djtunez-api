@@ -4,6 +4,7 @@ import {
   get_dj,
   submit_song_request,
   create_song_checkout,
+  register_dj_user,
 } from "../handlers/djtunez.handlers";
 import {
   eventIdParam,
@@ -76,6 +77,8 @@ export default (
     },
     submit_song_request
   );
+  // TODO: Check if validation is needed
+  router.post("/register", {}, register_dj_user);
 
   router.post(
     "/checkout",

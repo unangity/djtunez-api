@@ -3,6 +3,45 @@ import Stripe from "stripe";
 import { httpStatusMap } from "../utils/http-status-map";
 import DB from "../db";
 
+/**
+ * POST /api/djtunez/register
+ *
+ * Called immediately after a DJ creates their Firebase Auth account
+ * (createUserWithEmailAndPassword). Stamps role: 'dj' as a custom claim
+ * so the DJ can access the authenticated /api/stripe/* and /api/user/* routes.
+ *
+ * Auth: Bearer token in Authorization header (fresh ID token from the new account).
+ * No role check — the whole point of this endpoint is to assign the role.
+ */
+export const register_dj_user = async (
+  request: FastifyRequest,
+  reply: FastifyReply
+) => {
+  const authHeader = request.headers.authorization;
+  if (!authHeader) {
+    return reply
+      .code(httpStatusMap.unauthorized)
+      .send({ error: "Missing Authorization header" });
+  }
+
+  const token = authHeader.split(" ")[1];
+  if (!token) {
+    return reply
+      .code(httpStatusMap.unauthorized)
+      .send({ error: "Malformed Authorization header" });
+  }
+
+  try {
+    const decoded = await db.auth.verifyToken(token);
+    await db.auth.setDJRole(decoded.uid);
+    return reply.code(httpStatusMap.ok).send({ success: true });
+  } catch (err: any) {
+    return reply
+      .code(httpStatusMap.unauthorized)
+      .send({ error: err.message ?? "Invalid token" });
+  }
+};
+
 const db = new DB();
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2026-01-28.clover",

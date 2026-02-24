@@ -35,4 +35,15 @@ export default class Auth {
     return this._auth.deleteUser(userID);
   }
 
+  /**
+   * Stamp role: 'dj' as a custom claim on a Firebase Auth user.
+   * Merges with any existing claims so other flags (e.g. needsPasswordChange)
+   * are preserved.
+   */
+  async setDJRole(uid: string) {
+    const user = await this._auth.getUser(uid);
+    const existing = user.customClaims ?? {};
+    await this._auth.setCustomUserClaims(uid, { ...existing, role: 'dj' });
+  }
+
 }
