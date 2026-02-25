@@ -10,7 +10,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 // ========= types =========
 
-type CreateAccountBody = { displayName: string; country: string; email: string };
+type CreateAccountBody = { country: string };
 type AccountIdParam = { accountId: string };
 type CreateAccountLinkBody = { accountId: string; returnUrl: string; refreshUrl: string };
 type CreateProductBody = {
@@ -40,6 +40,17 @@ type CreateCheckoutBody = {
   metadata: CheckoutMetadata;
 };
 
+type StripeAccountDetails = {
+  type: Stripe.AccountCreateParams.Type;
+  email?: string;
+  business_profile?: { name?: string };
+  country: string;
+  capabilities: {
+    card_payments: { requested: boolean };
+    transfers: { requested: boolean };
+  };
+};
+
 // ========= handlers =========
 
 /**
@@ -50,21 +61,29 @@ export const create_account = async (
   request: FastifyRequest<{ Body: CreateAccountBody }>,
   reply: FastifyReply
 ) => {
-  const { displayName, country, email } = request.body;
+  const { country } = request.body;
+
+  const prefilled_details: StripeAccountDetails = {
+    type: "express",
+    email: undefined,
+    business_profile: undefined,
+    country,
+    capabilities: {
+      card_payments: { requested: true },
+      transfers: { requested: true },
+    },
+  }
+
+  if (request.authenticatedUser) {
+    prefilled_details.email = request.authenticatedUser.email!;
+    prefilled_details.business_profile = { name: request.authenticatedUser.name! };
+  }
+
   try {
-    const account = await stripe.accounts.create({
-      type: "express",
-      country,
-      email,
-      business_profile: { name: displayName },
-      capabilities: {
-        card_payments: { requested: true },
-        transfers: { requested: true },
-      },
-    });
+    const account = await stripe.accounts.create(prefilled_details);
     reply
       .code(httpStatusMap.created)
-      .send({ account: { id: account.id, display_name: displayName } });
+      .send({ account: { id: account.id, display_name: request.authenticatedUser?.name } }); // TODO: consider fetching displayName from client side token decoding.
   } catch (error: any) {
     reply
       .code(httpStatusMap.internalServerError)

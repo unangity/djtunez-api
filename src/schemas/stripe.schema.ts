@@ -14,9 +14,7 @@ export const accountIdParam = Joi.object({
 // ========= BODY SCHEMAS =========
 
 export const createAccountSchema = Joi.object({
-  displayName: Joi.string().min(1).required(),
   country: Joi.string().length(2).uppercase().required(),
-  email: Joi.string().email().required(),
 });
 
 export const createAccountLinkSchema = Joi.object({
