@@ -54,6 +54,7 @@ export const create_payment_intent = async (
       receipt_email: requesterEmail,
       transfer_data: { destination: stripeData.accountId },
       metadata: {
+        djId,
         eventId,
         title,
         artist,

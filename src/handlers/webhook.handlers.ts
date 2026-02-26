@@ -92,6 +92,7 @@ async function onAccountUpdated(account: Stripe.Account) {
 //  Shared queue metadata shape 
 
 type QueueMetadata = {
+  djId: string;
   eventId: string;
   title: string;
   artist: string;
@@ -104,15 +105,19 @@ type QueueMetadata = {
 async function writeToQueue(m: QueueMetadata) {
   const rtdb = db.rtdb;
 
+  if (!m.djId) return; // guard: djId must be present to locate the event
+
+  const eventPath = `/users/${m.djId}/events/${m.eventId}`;
+
   // Verify event exists.
-  const eventSnap = await rtdb.ref(`/events/${m.eventId}`).once("value");
+  const eventSnap = await rtdb.ref(eventPath).once("value");
   if (!eventSnap.exists()) return;
 
   // Determine queue position (append to end).
-  const queueSnap = await rtdb.ref(`/events/${m.eventId}/queue`).once("value");
+  const queueSnap = await rtdb.ref(`${eventPath}/queue`).once("value");
   const position = queueSnap.exists() ? Object.keys(queueSnap.val()).length : 0;
 
-  await rtdb.ref(`/events/${m.eventId}/queue`).push().set({
+  await rtdb.ref(`${eventPath}/queue`).push().set({
     title:          m.title,
     artist:         m.artist,
     cover:          m.cover ?? "",
