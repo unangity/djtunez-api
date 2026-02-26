@@ -21,6 +21,10 @@ export const queueEventIdParam = Joi.object({
   eventId: Joi.string().min(1).required(),
 });
 
+export const djIdLiveEventParam = Joi.object({
+  djId: Joi.string().min(1).required(),
+});
+
 // ========= BODY SCHEMAS =========
 
 export const submitSongRequestSchema = Joi.object({
@@ -38,8 +42,16 @@ export const eventResponseSchema = Joi.object({
   message: Joi.string().required(),
   event: Joi.object({
     id: Joi.string().required(),
-    djID: Joi.string().required(),
-    location: Joi.string().required(),
+    djId: Joi.string().required(),
+    name: Joi.string().required(),
+    venue: Joi.string().allow(""),
+    city: Joi.string().allow(""),
+    startDate: Joi.string().allow(""),
+    endDate: Joi.string().optional(),
+    startTime: Joi.string().allow(""),
+    endTime: Joi.string().allow(""),
+    status: Joi.string().allow(""),
+    live: Joi.boolean().required(),
     genres: Joi.array().items(Joi.string()).required(),
     tracks: Joi.array().items(Joi.string()).required(),
   }).required(),

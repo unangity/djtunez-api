@@ -2,6 +2,7 @@ import { FastifyInstance, FastifyPluginOptions } from "fastify";
 import {
   get_event,
   get_dj,
+  get_live_event,
   submit_song_request,
   create_song_checkout,
   register_dj_user,
@@ -9,6 +10,7 @@ import {
 import {
   eventIdParam,
   djIdParam,
+  djIdLiveEventParam,
   queueEventIdParam,
   submitSongRequestSchema,
   eventResponseSchema,
@@ -60,6 +62,21 @@ export default (
       },
     },
     get_dj
+  );
+
+  router.get(
+    "/dj/:djId/live-event",
+    {
+      schema: {
+        params: djIdLiveEventParam,
+        response: {
+          200: eventResponseSchema,
+          404: errorResponseSchema,
+          500: errorResponseSchema,
+        },
+      },
+    },
+    get_live_event
   );
 
   router.post(

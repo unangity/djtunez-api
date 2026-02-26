@@ -10,7 +10,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 });
 
 /**
- * DELETE /api/user/me
+ * DELETE /api/user
  *
  * Cascade-deletes a DJ's account server-side using the Firebase Admin SDK.
  * Auth is enforced by the djRoutes hook - request.authenticatedUser
@@ -32,23 +32,20 @@ export const delete_account = async (
   const { uid } = request.authenticatedUser;
 
   try {
-    const rtdb = db.rtdb;
-
     // Read stripe accountId and event IDs in parallel before touching anything.
-    const [stripeSnap, eventsSnap] = await Promise.all([
-      rtdb.ref(`users/${uid}/stripe`).once("value"),
-      rtdb.ref(`users/${uid}/events`).once("value"),
-    ]);
+    const stripeSnap = await db.rtdb.ref(`users/${uid}/stripe`).once("value");
 
-    const stripeAccountId: string | null = stripeSnap.val()?.accountId ?? null;
-    const eventsData = eventsSnap.val();
-    const eventIds: string[] = eventsData ? Object.keys(eventsData) : [];
-
-    // Delete event queue/history nodes (keyed by event, not uid).
-    await Promise.all(eventIds.map((id) => rtdb.ref(`events/${id}`).remove()));
-
+    if (stripeSnap.exists() && stripeSnap.val()?.accountId) {
+      const accountId = stripeSnap.val().accountId;
+      try {
+        await stripe.accounts.del(accountId);
+      } catch (err: any) {
+        // Log and swallow Stripe deletion errors since the RTDB + Auth data is already wiped.
+        console.error(`Failed to delete Stripe account ${accountId} for uid=${uid}:`, err);
+      }
+    }
     // Wipe all data under /users/{uid} (profile, stripe, planned events, history).
-    await rtdb.ref(`users/${uid}`).remove();
+    await db.rtdb.ref(`users/${uid}`).remove();
 
     // Revoke the Firebase Auth account last so the token stays valid for the
     // RTDB operations above.

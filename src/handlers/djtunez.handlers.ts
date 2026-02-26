@@ -100,8 +100,16 @@ export const get_event = async (
     const raw = snapshot.val();
     const event = {
       id,
-      djID: raw.djId ?? "",
-      location: raw.city ? `${raw.venue}, ${raw.city}` : (raw.venue ?? ""),
+      djId: raw.djId ?? "",
+      name: raw.name ?? "",
+      venue: raw.venue ?? "",
+      city: raw.city ?? "",
+      startDate: raw.startDate ?? "",
+      ...(raw.endDate ? { endDate: raw.endDate } : {}),
+      startTime: raw.startTime ?? "",
+      endTime: raw.endTime ?? "",
+      status: raw.status ?? "",
+      live: raw.live ?? false,
       genres: raw.genres ?? [],
       tracks: raw.tracks ?? [],
     };
@@ -226,6 +234,63 @@ export const submit_song_request = async (
     reply
       .code(httpStatusMap.internalServerError)
       .send({ error: "Failed to submit song request" });
+  }
+};
+
+export type DjIdLiveEventParam = { djId: string };
+
+/**
+ * GET /api/djtunez/dj/:djId/live-event
+ *
+ * Returns the DJ's current live event — the one event where live === true.
+ * Reads /users/{djId}/events for the list of event IDs, fetches each in
+ * parallel, and returns the first one with live: true.
+ *
+ * Response shape is identical to GET /api/djtunez/event/:id.
+ */
+export const get_live_event = async (
+  request: FastifyRequest<{ Params: DjIdLiveEventParam }>,
+  reply: FastifyReply
+) => {
+  const { djId } = request.params;
+  try {
+    // Events are stored at /users/{djId}/events/{eventId} by the DJ app.
+    const eventsSnap = await db.rtdb
+      .ref(`/users/${djId}/events`)
+      .orderByChild("live")
+      .equalTo(true)
+      .once("value");
+
+    if (!eventsSnap.exists()) {
+      return reply
+        .code(httpStatusMap.notFound)
+        .send({ error: "No live event found" });
+    }
+
+    const eventsVal = eventsSnap.val() as Record<string, any>;
+    const [id, raw] = Object.entries(eventsVal)[0];
+
+    const event = {
+      id,
+      djId: raw.djId ?? "",
+      name: raw.name ?? "",
+      venue: raw.venue ?? "",
+      city: raw.city ?? "",
+      startDate: raw.startDate ?? "",
+      ...(raw.endDate ? { endDate: raw.endDate } : {}),
+      startTime: raw.startTime ?? "",
+      endTime: raw.endTime ?? "",
+      status: raw.status ?? "",
+      live: raw.live ?? false,
+      genres: raw.genres ?? [],
+      tracks: raw.tracks ?? [],
+    };
+
+    reply.code(httpStatusMap.ok).send({ message: "Successful", event });
+  } catch (error) {
+    reply
+      .code(httpStatusMap.internalServerError)
+      .send({ error: "Failed to fetch live event" });
   }
 };
 
