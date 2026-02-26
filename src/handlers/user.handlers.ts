@@ -44,11 +44,8 @@ export const delete_account = async (
     const eventsData = eventsSnap.val();
     const eventIds: string[] = eventsData ? Object.keys(eventsData) : [];
 
-    // Delete the Stripe connected account and event queue/history nodes in parallel.
-    await Promise.all([
-      ...(stripeAccountId ? [stripe.accounts.del(stripeAccountId)] : []),
-      ...eventIds.map((id) => rtdb.ref(`events/${id}`).remove()),
-    ]);
+    // Delete event queue/history nodes (keyed by event, not uid).
+    await Promise.all(eventIds.map((id) => rtdb.ref(`events/${id}`).remove()));
 
     // Wipe all data under /users/{uid} (profile, stripe, planned events, history).
     await rtdb.ref(`users/${uid}`).remove();

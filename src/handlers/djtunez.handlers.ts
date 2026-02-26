@@ -135,7 +135,12 @@ export const get_dj = async (
 ) => {
   const { id } = request.params;
   try {
-    const snapshot = await db.rtdb.ref(`/djs/${id}`).once("value");
+    // TODO: Fetch auth user before RTDB
+    const [snapshot, authUser] = await Promise.all([
+      db.rtdb.ref(`/users/${id}/profile`).once("value"),
+      db.auth.getUser(id),
+    ]);
+
     if (!snapshot.exists()) {
       return reply
         .code(httpStatusMap.notFound)
@@ -145,10 +150,10 @@ export const get_dj = async (
     const raw = snapshot.val();
     const dj = {
       id,
-      stageName: raw.stageName ?? "",
+      stageName: authUser.displayName ?? "",
       bio: raw.bio ?? "",
-      cover: raw.wallpaper ?? raw.avatar ?? "",
-      ratings: raw.ratings ?? 0,
+      cover: raw.wallpaper ?? "",
+      ratings: raw.rating ?? 0,
       price: raw.price ?? 0,
       currency: raw.currency ?? "",
       currencySymbol: raw.currencySymbol ?? "",
