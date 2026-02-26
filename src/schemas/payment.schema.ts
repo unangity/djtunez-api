@@ -7,6 +7,8 @@ export const createPaymentIntentSchema = Joi.object({
   artist: Joi.string().min(1).max(200).required(),
   cover: Joi.string().uri().required(),
   requesterEmail: Joi.string().email().required(),
+  amount: Joi.number().positive().required(),
+  currency: Joi.string().min(2).max(5).required(),
 });
 
 export const createPaymentIntentResponseSchema = Joi.object({

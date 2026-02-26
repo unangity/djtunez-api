@@ -112,6 +112,9 @@ export const get_event = async (
       live: raw.live ?? false,
       genres: raw.genres ?? [],
       tracks: raw.tracks ?? [],
+      price: raw.price ?? 0,
+      currency: raw.currency ?? "",
+      currencySymbol: raw.currencySymbol ?? "",
     };
 
     reply.code(httpStatusMap.ok).send({ message: "Successful", event });
@@ -162,7 +165,6 @@ export const get_dj = async (
       bio: raw.bio ?? "",
       cover: raw.wallpaper ?? "",
       ratings: raw.rating ?? 0,
-      price: raw.price ?? 0,
       currency: raw.currency ?? "",
       currencySymbol: raw.currencySymbol ?? "",
     };
@@ -284,6 +286,9 @@ export const get_live_event = async (
       live: raw.live ?? false,
       genres: raw.genres ?? [],
       tracks: raw.tracks ?? [],
+      price: raw.price ?? 0,
+      currency: raw.currency ?? "",
+      currencySymbol: raw.currencySymbol ?? "",
     };
 
     reply.code(httpStatusMap.ok).send({ message: "Successful", event });
@@ -331,18 +336,17 @@ export const create_song_checkout = async (
   } = request.body;
 
   try {
-    const [profileSnap, stripeSnap] = await Promise.all([
-      db.rtdb.ref(`/users/${djId}/profile`).once("value"),
+    const [eventSnap, stripeSnap] = await Promise.all([
+      db.rtdb.ref(`/users/${djId}/events/${eventId}`).once("value"),
       db.rtdb.ref(`/users/${djId}/stripe`).once("value"),
     ]);
 
-    if (!profileSnap.exists()) {
+    if (!eventSnap.exists()) {
       return reply
         .code(httpStatusMap.notFound)
-        .send({ error: "DJ not found" });
+        .send({ error: "Event not found" });
     }
 
-    const profile = profileSnap.val();
     const stripeData = stripeSnap.val();
 
     if (!stripeData?.accountId) {
@@ -351,8 +355,9 @@ export const create_song_checkout = async (
         .send({ error: "DJ has not connected a Stripe account" });
     }
 
-    const price: number = profile.price ?? 0;
-    const currency: string = profile.currency ?? "eur";
+    const eventData = eventSnap.val();
+    const price: number = eventData.price ?? 0;
+    const currency: string = eventData.currency ?? "eur";
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",

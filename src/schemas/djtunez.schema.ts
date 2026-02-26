@@ -54,6 +54,9 @@ export const eventResponseSchema = Joi.object({
     live: Joi.boolean().required(),
     genres: Joi.array().items(Joi.string()).required(),
     tracks: Joi.array().items(Joi.string()).required(),
+    price: Joi.number().required(),
+    currency: Joi.string().allow(""),
+    currencySymbol: Joi.string().allow(""),
   }).required(),
 });
 
@@ -65,7 +68,6 @@ export const djResponseSchema = Joi.object({
     bio: Joi.string().allow(""),
     cover: Joi.string().allow(""),
     ratings: Joi.number(),
-    price: Joi.number().required(),
     currency: Joi.string().required(),
     currencySymbol: Joi.string().required(),
   }).required(),

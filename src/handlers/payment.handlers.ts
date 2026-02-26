@@ -16,14 +16,16 @@ type CreatePaymentIntentBody = {
   artist: string;
   cover: string;
   requesterEmail: string;
+  amount: number;
+  currency: string;
 };
 
 /**
  * POST /api/payment/create-intent
  *
  * Creates a Stripe PaymentIntent for a fan's song request.
- * Reads the DJ's price, currency, and Stripe account from RTDB so the
- * web-ui never needs access to those values directly.
+ * Reads the event's price, currency, and the DJ's Stripe account from RTDB
+ * so the web-ui never needs access to those values directly.
  *
  * Full metadata is embedded so the payment_intent.succeeded webhook
  * can write the song request to the queue without any client-side round-trip.
@@ -34,21 +36,10 @@ export const create_payment_intent = async (
   request: FastifyRequest<{ Body: CreatePaymentIntentBody }>,
   reply: FastifyReply
 ) => {
-  const { djId, eventId, title, artist, cover, requesterEmail } = request.body;
+  const { djId, eventId, title, artist, cover, requesterEmail, amount, currency } = request.body;
 
   try {
-    const [profileSnap, stripeSnap] = await Promise.all([
-      db.rtdb.ref(`/users/${djId}/profile`).once("value"),
-      db.rtdb.ref(`/users/${djId}/stripe`).once("value"),
-    ]);
-
-    if (!profileSnap.exists()) {
-      return reply
-        .code(httpStatusMap.notFound)
-        .send({ error: "DJ not found" });
-    }
-
-    const profile = profileSnap.val();
+    const stripeSnap = await db.rtdb.ref(`/users/${djId}/stripe`).once("value");
     const stripeData = stripeSnap.val();
 
     if (!stripeData?.accountId) {
@@ -57,11 +48,8 @@ export const create_payment_intent = async (
         .send({ error: "DJ has not connected a Stripe account" });
     }
 
-    const price: number = profile.price ?? 0;
-    const currency: string = profile.currency ?? "eur";
-
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(price * 100),
+      amount: Math.round(amount * 100),
       currency,
       receipt_email: requesterEmail,
       transfer_data: { destination: stripeData.accountId },
@@ -71,7 +59,7 @@ export const create_payment_intent = async (
         artist,
         cover,
         requesterEmail,
-        amount: String(price),
+        amount: String(amount),
         currency,
       },
     });
