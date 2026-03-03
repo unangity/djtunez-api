@@ -1,4 +1,5 @@
 import { FastifyInstance, FastifyPluginOptions } from "fastify";
+import Joi from "joi";
 import {
   get_event,
   get_dj,
@@ -7,8 +8,9 @@ import {
 } from "../handlers/djtunez.handlers";
 import {
   eventIdParam,
-  djIdParam,
-  djIdLiveEventParam,
+  djUsernameParam,
+  djUsernameLiveEventParam,
+  registerBodySchema,
   eventResponseSchema,
   djResponseSchema,
   errorResponseSchema,
@@ -18,10 +20,10 @@ import {
  * Public DJTunez routes - no auth required.
  * Registered in app.ts outside the auth pre-handler scope.
  *
- * GET  /api/djtunez/event/:id             - fetch event info for fans
- * GET  /api/djtunez/dj/:id               - fetch DJ info for fans
- * GET  /api/djtunez/dj/:djId/live-event  - fetch DJ's current live event
- * POST /api/djtunez/register             - stamp 'dj' role on a new account
+ * GET  /api/djtunez/event/:id                    - fetch event info for fans
+ * GET  /api/djtunez/dj/:username               - fetch DJ info by plain-text username
+ * GET  /api/djtunez/dj/:username/live-event    - fetch DJ's current live event
+ * POST /api/djtunez/register                    - stamp 'dj' role on a new account
  */
 export default (
   router: FastifyInstance,
@@ -44,10 +46,10 @@ export default (
   );
 
   router.get(
-    "/dj/:id",
+    "/dj/:username",
     {
       schema: {
-        params: djIdParam,
+        params: djUsernameParam,
         response: {
           200: djResponseSchema,
           404: errorResponseSchema,
@@ -59,10 +61,10 @@ export default (
   );
 
   router.get(
-    "/dj/:djId/live-event",
+    "/dj/:username/live-event",
     {
       schema: {
-        params: djIdLiveEventParam,
+        params: djUsernameLiveEventParam,
         response: {
           200: eventResponseSchema,
           404: errorResponseSchema,
@@ -73,7 +75,21 @@ export default (
     get_live_event
   );
 
-  router.post("/register", {}, register_dj_user);
+  router.post(
+    "/register",
+    {
+      schema: {
+        body: registerBodySchema,
+        response: {
+          200: Joi.object({ success: Joi.boolean().required() }),
+          400: errorResponseSchema,
+          401: errorResponseSchema,
+          409: errorResponseSchema,
+        },
+      },
+    },
+    register_dj_user
+  );
 
   done();
 };

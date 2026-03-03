@@ -7,18 +7,26 @@ export const errorResponseSchema = Joi.object({
   message: Joi.string(),
 });
 
+// ========= BODY =========
+
+// Lowercase letters, numbers, underscores — 3–30 chars.
+export const registerBodySchema = Joi.object({
+  username: Joi.string().min(3).max(30).pattern(/^[a-z0-9_]+$/).required(),
+});
+
 // ========= PARAMS =========
 
 export const eventIdParam = Joi.object({
   id: Joi.string().min(1).required(),
 });
 
-export const djIdParam = Joi.object({
-  id: Joi.string().min(1).required(),
+// DJ routes accept the plain-text username; the backend derives the RTDB ID.
+export const djUsernameParam = Joi.object({
+  username: Joi.string().min(1).required(),
 });
 
-export const djIdLiveEventParam = Joi.object({
-  djId: Joi.string().min(1).required(),
+export const djUsernameLiveEventParam = Joi.object({
+  username: Joi.string().min(1).required(),
 });
 
 // ========= RESPONSE SCHEMAS =========
@@ -48,13 +56,12 @@ export const eventResponseSchema = Joi.object({
 export const djResponseSchema = Joi.object({
   message: Joi.string().required(),
   dj: Joi.object({
-    id: Joi.string().required(),
-    stageName: Joi.string().required(),
+    stageName: Joi.string().allow(""),
     bio: Joi.string().allow(""),
     cover: Joi.string().allow(""),
     ratings: Joi.number(),
-    currency: Joi.string().required(),
-    currencySymbol: Joi.string().required(),
+    currency: Joi.string().allow(""),
+    currencySymbol: Joi.string().allow(""),
   }).required(),
 });
 

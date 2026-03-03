@@ -1,19 +1,27 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { httpStatusMap } from "../utils/http-status-map";
+import { encryptUsername } from "../utils/username";
 import DB from "../db";
+
+export type RegisterBody = { username: string };
 
 /**
  * POST /api/djtunez/register
  *
- * Called immediately after a DJ creates their Firebase Auth account
- * (createUserWithEmailAndPassword). Stamps role: 'dj' as a custom claim
- * so the DJ can access the authenticated /api/stripe/* and /api/user/* routes.
+ * Called immediately after a DJ creates their Firebase Auth account.
+ * Body: { username } — the plain-text username chosen during sign-up.
  *
- * Auth: Bearer token in Authorization header (fresh ID token from the new account).
- * No role check — the whole point of this endpoint is to assign the role.
+ * Does four things:
+ *   1. Checks /usernames/{username} — returns 409 if already taken.
+ *   2. Stamps role: 'dj' as a custom claim on the Auth user.
+ *   3. Derives the RTDB ID via HMAC-SHA256(username) and seeds
+ *      /users/{encryptedId}/profile with { _id, _authId }.
+ *   4. Writes /usernames/{username}: true as a flat uniqueness index.
+ *
+ * Auth: Bearer token in Authorization header (fresh ID token).
  */
 export const register_dj_user = async (
-  request: FastifyRequest,
+  request: FastifyRequest<{ Body: RegisterBody }>,
   reply: FastifyReply
 ) => {
   const authHeader = request.headers.authorization;
@@ -30,9 +38,36 @@ export const register_dj_user = async (
       .send({ error: "Malformed Authorization header" });
   }
 
+  const { username } = request.body ?? {};
+  if (!username || typeof username !== "string") {
+    return reply
+      .code(httpStatusMap.badRequest)
+      .send({ error: "username is required in the request body" });
+  }
+
   try {
+    // Server-side uniqueness check — guards against races between clients.
+    const existingSnap = await db.rtdb.ref(`/usernames/${username}`).once("value");
+    if (existingSnap.exists()) {
+      return reply
+        .code(httpStatusMap.conflict)
+        .send({ error: "Username is already taken" });
+    }
+
     const decoded = await db.auth.verifyToken(token);
-    await db.auth.setDJRole(decoded.uid);
+    const encryptedId = encryptUsername(username);
+
+    await Promise.all([
+      db.auth.setDJRole(decoded.uid),
+      // _id and _authId are internal — never returned in any public response.
+      db.rtdb.ref(`/users/${encryptedId}/profile`).update({
+        _id: encryptedId,
+        _authId: decoded.uid,
+      }),
+      // Flat index so clients can load all taken usernames in one read.
+      db.rtdb.ref(`/usernames/${username}`).set(true),
+    ]);
+
     return reply.code(httpStatusMap.ok).send({ success: true });
   } catch (err: any) {
     return reply
@@ -46,7 +81,8 @@ const db = new DB();
 // ========= types =========
 
 export type EventIdParam = { id: string };
-export type DjIdParam = { id: string };
+export type DjUsernameParam = { username: string };
+export type DjUsernameLiveEventParam = { username: string };
 
 // ========= handlers =========
 
@@ -112,31 +148,25 @@ export const get_event = async (
 };
 
 /**
- * GET /api/djtunez/dj/:id
+ * GET /api/djtunez/dj/:username
  *
- * Reads DJ info from RTDB at /djs/{id} and returns it shaped as the
- * web-ui's DJInfoProps: { id, stageName, bio, cover, ratings, price, currency, currencySymbol }.
+ * Accepts the DJ's plain-text username from the URL. Derives the RTDB ID
+ * via HMAC-SHA256(username) server-side, fetches /users/{encryptedId}/profile,
+ * then fetches the Firebase Auth user using the stored _authId.
  *
- * Expected RTDB shape at /djs/{id}:
- *   stageName: string
- *   bio?: string
- *   wallpaper?: string   (used as web-ui "cover")
- *   ratings?: number
- *   price: number        (price per request in the DJ's currency)
- *   currency: string
- *   currencySymbol: string
+ * Response merges RTDB profile data with Auth data (displayName as stageName).
+ * Neither the encrypted ID nor the Firebase Auth UID is ever sent in the response.
  */
 export const get_dj = async (
-  request: FastifyRequest<{ Params: DjIdParam }>,
+  request: FastifyRequest<{ Params: DjUsernameParam }>,
   reply: FastifyReply
 ) => {
-  const { id } = request.params;
+  const { username } = request.params;
   try {
-    // TODO: Fetch auth user before RTDB
-    const [snapshot, authUser] = await Promise.all([
-      db.rtdb.ref(`/users/${id}/profile`).once("value"),
-      db.auth.getUser(id),
-    ]);
+    const encryptedId = encryptUsername(username);
+    const snapshot = await db.rtdb
+      .ref(`/users/${encryptedId}/profile`)
+      .once("value");
 
     if (!snapshot.exists()) {
       return reply
@@ -145,8 +175,16 @@ export const get_dj = async (
     }
 
     const raw = snapshot.val();
+    const authId = raw._authId as string | undefined;
+    if (!authId) {
+      return reply
+        .code(httpStatusMap.notFound)
+        .send({ error: "DJ not found" });
+    }
+
+    const authUser = await db.auth.getUser(authId);
+
     const dj = {
-      id,
       stageName: authUser.displayName ?? "",
       bio: raw.bio ?? "",
       cover: raw.wallpaper ?? "",
@@ -163,26 +201,26 @@ export const get_dj = async (
   }
 };
 
-export type DjIdLiveEventParam = { djId: string };
-
 /**
- * GET /api/djtunez/dj/:djId/live-event
+ * GET /api/djtunez/dj/:username/live-event
  *
  * Returns the DJ's current live event — the one event where live === true.
- * Reads /users/{djId}/events for the list of event IDs, fetches each in
- * parallel, and returns the first one with live: true.
+ * Encrypts the username to derive the RTDB ID, reads /users/{encryptedId}/events,
+ * and returns the first event with live: true.
  *
  * Response shape is identical to GET /api/djtunez/event/:id.
  */
 export const get_live_event = async (
-  request: FastifyRequest<{ Params: DjIdLiveEventParam }>,
+  request: FastifyRequest<{ Params: DjUsernameLiveEventParam }>,
   reply: FastifyReply
 ) => {
-  const { djId } = request.params;
+  const { username } = request.params;
   try {
-    // Events are stored at /users/{djId}/events/{eventId} by the DJ app.
+    const encryptedId = encryptUsername(username);
+
+    // Events are stored at /users/{encryptedId}/events/{eventId} by the DJ app.
     const eventsSnap = await db.rtdb
-      .ref(`/users/${djId}/events`)
+      .ref(`/users/${encryptedId}/events`)
       .orderByChild("live")
       .equalTo(true)
       .once("value");
@@ -222,4 +260,3 @@ export const get_live_event = async (
       .send({ error: "Failed to fetch live event" });
   }
 };
-
