@@ -20,10 +20,10 @@ import {
  * Public DJTunez routes - no auth required.
  * Registered in app.ts outside the auth pre-handler scope.
  *
- * GET  /api/djtunez/event/:id                    - fetch event info for fans
- * GET  /api/djtunez/dj/:username               - fetch DJ info by plain-text username
- * GET  /api/djtunez/dj/:username/live-event    - fetch DJ's current live event
- * POST /api/djtunez/register                    - stamp 'dj' role on a new account
+ * GET  /reqrave/event/:id                    - fetch event info for fans
+ * GET  /reqrave/dj/:username               - fetch DJ info by plain-text username
+ * GET  /reqrave/dj/:username/live-event    - fetch DJ's current live event
+ * POST /reqrave/register                    - stamp 'dj' role on a new account
  */
 export default (
   router: FastifyInstance,

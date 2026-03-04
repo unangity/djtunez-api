@@ -21,7 +21,7 @@ type CreatePaymentIntentBody = {
 };
 
 /**
- * POST /api/payment/create-intent
+ * POST /payment/create-intent
  *
  * Creates a Stripe PaymentIntent for a fan's song request.
  * Reads the event's price, currency, and the DJ's Stripe account from RTDB

@@ -10,7 +10,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 });
 
 /**
- * POST /api/webhooks/stripe
+ * POST /webhooks/stripe
  *
  * Single entry point for all Stripe webhook events.
  * Stripe signs each request; the raw body is verified against the signature

@@ -54,7 +54,7 @@ type StripeAccountDetails = {
 // ========= handlers =========
 
 /**
- * POST /api/stripe/accounts
+ * POST /stripe/accounts
  * Create a Stripe Express connected account for a DJ.
  */
 export const create_account = async (
@@ -92,7 +92,7 @@ export const create_account = async (
 };
 
 /**
- * GET /api/stripe/accounts/:accountId
+ * GET /stripe/accounts/:accountId
  * Retrieve a DJ's account status and derived onboarding flags.
  */
 export const get_account_status = async (
@@ -119,7 +119,7 @@ export const get_account_status = async (
 };
 
 /**
- * POST /api/stripe/account-links
+ * POST /stripe/account-links
  * Generate a short-lived Stripe-hosted onboarding URL for a DJ.
  */
 export const get_onboarding_link = async (
@@ -143,7 +143,7 @@ export const get_onboarding_link = async (
 };
 
 /**
- * POST /api/stripe/products
+ * POST /stripe/products
  * Create a product + price tier (e.g. "1 Song Request - €2.99").
  * Amount is in major currency units (e.g. 2.99); converted to cents internally.
  */
@@ -183,7 +183,7 @@ export const create_product = async (
 };
 
 /**
- * GET /api/stripe/products?connectedAccountId=acct_xxx
+ * GET /stripe/products?connectedAccountId=acct_xxx
  * List active DJ products. Filter by DJ when connectedAccountId is provided.
  */
 export const list_products = async (
@@ -217,7 +217,7 @@ export const list_products = async (
 };
 
 /**
- * GET /api/stripe/balance/:accountId
+ * GET /stripe/balance/:accountId
  * Get available + pending balance for a DJ's connected account.
  * Amounts are returned in major currency units (not cents).
  */
@@ -248,7 +248,7 @@ export const get_payout_balance = async (
 };
 
 /**
- * POST /api/stripe/payout
+ * POST /stripe/payout
  * Initiate a manual withdrawal from the DJ's settled balance to their bank.
  * Amount is in major currency units; converted to cents internally.
  */
@@ -277,7 +277,7 @@ export const request_payout = async (
 };
 
 /**
- * POST /api/stripe/checkout
+ * POST /stripe/checkout
  * Create a Stripe Checkout Session (destination charge to the DJ's account).
  */
 export const create_checkout_session = async (

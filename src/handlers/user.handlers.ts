@@ -9,7 +9,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 });
 
 /**
- * DELETE /api/user
+ * DELETE /user
  *
  * Cascade-deletes a DJ's account server-side using the Firebase Admin SDK.
  * Auth is enforced by the djRoutes hook - request.authenticatedUser

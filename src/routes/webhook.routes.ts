@@ -4,7 +4,7 @@ import { handle_webhook } from "../handlers/webhook.handlers";
 /**
  * Stripe webhook routes - no Firebase auth (Stripe signs requests instead).
  *
- * POST /api/webhooks/stripe
+ * POST /webhooks/stripe
  *
  * The JSON content-type parser is overridden to deliver the raw Buffer so
  * stripe.webhooks.constructEvent() can verify the Stripe-Signature header.

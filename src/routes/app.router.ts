@@ -14,12 +14,12 @@ import {
 /**
  * Root router - the only router registered in app.ts.
  *
- * /api/reqrave/*   - public - event/DJ info + song queue writes
- * /api/spotify/*   - public - Spotify token exchange
- * /api/payment/*   - public - Stripe PaymentIntent creation
- * /api/webhooks/*  - public - Stripe webhook events (Stripe-signed, no Firebase auth)
- * /api/user/*      - Firebase auth required - DJ self-service (e.g. account deletion)
- * /api/stripe/*    - Firebase auth + role=dj required - Stripe Connect management
+ * /reqrave/*   - public - event/DJ info + song queue writes
+ * /spotify/*   - public - Spotify token exchange
+ * /payment/*   - public - Stripe PaymentIntent creation
+ * /webhooks/*  - public - Stripe webhook events (Stripe-signed, no Firebase auth)
+ * /user/*      - Firebase auth required - DJ self-service (e.g. account deletion)
+ * /stripe/*    - Firebase auth + role=dj required - Stripe Connect management
  */
 export default (
   router: FastifyInstance,

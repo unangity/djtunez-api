@@ -90,7 +90,7 @@ server.get("/health", async (request, reply) => {
 });
 
 // All routes registered through app.router.ts
-server.register(router, { prefix: "/api" });
+server.register(router);
 
 // Bind to 0.0.0.0 so the server is reachable from other devices on the
 // same network (physical Android/iOS device via WiFi, Firebase emulators, etc.)

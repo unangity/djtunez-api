@@ -31,14 +31,14 @@ import {
 /**
  * DJ Stripe routes - Firebase auth required (djRoutes applied at scope level in app.router.ts).
  *
- * POST   /api/stripe/accounts              - create connected account
- * GET    /api/stripe/accounts/:accountId   - get account status
- * POST   /api/stripe/account-links         - get onboarding link
- * POST   /api/stripe/products              - create product + price
- * GET    /api/stripe/products              - list products
- * GET    /api/stripe/balance/:accountId    - get payout balance
- * POST   /api/stripe/payout               - request payout
- * POST   /api/stripe/checkout             - create checkout session
+ * POST   /stripe/accounts              - create connected account
+ * GET    /stripe/accounts/:accountId   - get account status
+ * POST   /stripe/account-links         - get onboarding link
+ * POST   /stripe/products              - create product + price
+ * GET    /stripe/products              - list products
+ * GET    /stripe/balance/:accountId    - get payout balance
+ * POST   /stripe/payout               - request payout
+ * POST   /stripe/checkout             - create checkout session
  */
 export default (
   router: FastifyInstance,

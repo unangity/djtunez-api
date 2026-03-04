@@ -2,7 +2,7 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import { httpStatusMap } from "../utils/http-status-map";
 
 /**
- * GET /api/spotify/token
+ * GET /spotify/token
  * Exchange Spotify client credentials for an access token.
  * Credentials are read from SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET env vars.
  */

@@ -5,7 +5,7 @@ import DB from "../db";
 export type RegisterBody = { username: string; stageName: string };
 
 /**
- * POST /api/djtunez/register
+ * POST /reqrave/register
  *
  * Called immediately after a DJ creates their Firebase Auth account.
  * Body: { username, stageName }
@@ -87,7 +87,7 @@ export type DjUsernameLiveEventParam = { username: string };
 // ========= handlers =========
 
 /**
- * GET /api/djtunez/event/:id
+ * GET /reqrave/event/:id
  *
  * Reads event metadata from RTDB at /events/{id}.
  */
@@ -133,7 +133,7 @@ export const get_event = async (
 };
 
 /**
- * GET /api/djtunez/dj/:username
+ * GET /reqrave/dj/:username
  *
  * Fetches /users/{username}/profile and returns the DJ data.
  * auth_id is never sent in the response.
@@ -174,7 +174,7 @@ export const get_dj = async (
 };
 
 /**
- * GET /api/djtunez/dj/:username/live-event
+ * GET /reqrave/dj/:username/live-event
  *
  * Returns the DJ's current live event (live === true) from
  * /users/{username}/events.

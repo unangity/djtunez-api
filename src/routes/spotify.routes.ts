@@ -8,7 +8,7 @@ import {
 /**
  * Public Spotify routes - no auth required.
  *
- * GET /api/spotify/token - exchange client credentials for a Spotify access token
+ * GET /spotify/token - exchange client credentials for a Spotify access token
  */
 export default (
   router: FastifyInstance,

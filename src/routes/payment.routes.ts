@@ -9,7 +9,7 @@ import {
 /**
  * Public payment routes - no auth required.
  *
- * POST /api/payment/create-intent - create a Stripe PaymentIntent for a song request
+ * POST /payment/create-intent - create a Stripe PaymentIntent for a song request
  */
 export default (
   router: FastifyInstance,
