@@ -1,11 +1,11 @@
 {
-  "name": "djtunez-api",
+  "name": "reqrave-api",
   "version": "1.0.0",
   "engines": {
     "npm": ">=10",
     "node": ">=22"
   },
-  "description": "API for djtunez app and webapp",
+  "description": "API for Reqrave app and webapp",
   "main": "app.js",
   "scripts": {
     "test": "echo 'test'",

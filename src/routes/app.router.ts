@@ -14,7 +14,7 @@ import {
 /**
  * Root router - the only router registered in app.ts.
  *
- * /api/djtunez/*   - public - event/DJ info + song queue writes
+ * /api/reqrave/*   - public - event/DJ info + song queue writes
  * /api/spotify/*   - public - Spotify token exchange
  * /api/payment/*   - public - Stripe PaymentIntent creation
  * /api/webhooks/*  - public - Stripe webhook events (Stripe-signed, no Firebase auth)
@@ -36,7 +36,7 @@ export default (
     };
 
   //  Public routes (no auth)
-  router.register(publicScope((s) => s.register(djtunezRoutes)), { prefix: "/djtunez" });
+  router.register(publicScope((s) => s.register(djtunezRoutes)), { prefix: "/reqrave" });
   router.register(publicScope((s) => s.register(spotifyRoutes)), { prefix: "/spotify" });
   router.register(publicScope((s) => s.register(paymentRoutes)), { prefix: "/payment" });
   // Webhook routes skip the Joi compilers - raw Buffer body, no schema validation.

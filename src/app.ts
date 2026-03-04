@@ -14,8 +14,8 @@ if (DEV) {
   server.register(import("@fastify/swagger"), {
     swagger: {
       info: {
-        title: "DJTunez API",
-        description: "DJTunez backend API",
+        title: "Reqrave API",
+        description: "Reqrave backend API",
         version: "1.0.0",
       },
       host: "localhost",
