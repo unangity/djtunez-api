@@ -73,7 +73,7 @@ server.register(cors, {
       return;
     }
     const hostname = new URL(origin).hostname;
-    if (hostname === "djtunez.com") {
+    if (hostname === process.env.PROD_FRONTEND_HOSTNAME) {
       cb(null, true);
       return;
     }
@@ -82,7 +82,7 @@ server.register(cors, {
 });
 
 if (process.env.NODE_ENV === "production") {
-  host = `https://${process.env.GOOGLE_CLOUD_PROJECT}.ey.r.appspot.com`;
+  host = process.env.EXPO_PUBLIC_STRIPE_API_URL || `https://${process.env.GOOGLE_CLOUD_PROJECT}.a.run.app`;
 }
 
 server.get("/health", async (request, reply) => {

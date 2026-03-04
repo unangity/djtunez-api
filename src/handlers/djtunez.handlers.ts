@@ -11,7 +11,7 @@ export type RegisterBody = { username: string; stageName: string };
  * Body: { username, stageName }
  *
  * Does three things:
- *   1. Checks /usernames/{username} — returns 409 if already taken.
+ *   1. Checks /usernames/{username}  returns 409 if already taken.
  *   2. Stamps role: 'dj' as a custom claim on the Auth user.
  *   3. Seeds /users/{username}/profile and writes /usernames/{username}: true.
  *
@@ -46,7 +46,7 @@ export const register_dj_user = async (
   }
 
   try {
-    // Server-side uniqueness check — guards against races between clients.
+    // Server-side uniqueness check  guards against races between clients.
     const existingSnap = await db.rtdb.ref(`/usernames/${username}`).once("value");
     if (existingSnap.exists()) {
       return reply

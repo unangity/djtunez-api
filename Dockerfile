@@ -1,4 +1,4 @@
-# ─── Stage 1: compile TypeScript ─────────────────────────────────────────────
+# --- Stage 1: compile TypeScript ---------------------------------------------
 FROM node:22-slim AS builder
 WORKDIR /build
 
@@ -10,13 +10,13 @@ RUN npm ci
 COPY src/ ./
 RUN npm run build
 
-# ─── Stage 2: production-only node_modules ───────────────────────────────────
+# --- Stage 2: production-only node_modules -----------------------------------
 FROM node:22-slim AS deps
 WORKDIR /deps
 COPY src/package*.json ./
 RUN npm ci --omit=dev
 
-# ─── Stage 3: distroless runtime (no shell, no package manager) ──────────────
+# --- Stage 3: distroless runtime (no shell, no package manager) --------------
 FROM gcr.io/distroless/nodejs22-debian12
 WORKDIR /app
 

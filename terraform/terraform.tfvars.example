@@ -1,0 +1,28 @@
+# GCP
+project_id = "djtunez"
+region     = "europe-west1"
+
+# Placeholder — overridden by the workflow on every deploy
+image = "europe-west1-docker.pkg.dev/djtunez/djtunez-api/api:latest"
+
+# GitHub
+# Generate at https://github.com/settings/tokens — needs 'repo' scope
+github_token = "ghp_..."
+github_repo  = "owner/djtunez-api"
+
+# Stripe
+stripe_secret_key     = "sk_live_..."
+stripe_webhook_secret = "whsec_..."
+
+# Spotify
+spotify_client_id     = ""
+spotify_client_secret = ""
+
+# App config
+# platform_fee_percent  = "10"
+prod_frontend_hostname = "app.yourdomain.com"
+stripe_return_url      = "https://app.yourdomain.com/stripe/return"
+stripe_refresh_url     = "https://app.yourdomain.com/stripe/refresh"
+
+# Set this after first apply — get the value with: terraform output cloud_run_url
+# expo_public_stripe_api_url = "https://djtunez-api-xxxx-ew.a.run.app"
