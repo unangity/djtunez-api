@@ -212,14 +212,6 @@ resource "google_cloud_run_v2_service" "api" {
         name  = "PROD_FRONTEND_HOSTNAME"
         value = var.prod_frontend_hostname
       }
-      env {
-        name  = "STRIPE_RETURN_URL"
-        value = var.stripe_return_url
-      }
-      env {
-        name  = "STRIPE_REFRESH_URL"
-        value = var.stripe_refresh_url
-      }
       # Omitted on first apply (Cloud Run URL unknown). After first apply:
       #   1. terraform output cloud_run_url
       #   2. Add expo_public_stripe_api_url = "<url>" to terraform.tfvars

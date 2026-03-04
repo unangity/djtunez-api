@@ -20,9 +20,7 @@ spotify_client_secret = ""
 
 # App config
 # platform_fee_percent  = "10"
-prod_frontend_hostname = "app.yourdomain.com"
-stripe_return_url      = "https://app.yourdomain.com/stripe/return"
-stripe_refresh_url     = "https://app.yourdomain.com/stripe/refresh"
+prod_frontend_hostname = "reqrave.com"
 
 # Set this after first apply — get the value with: terraform output cloud_run_url
 # expo_public_stripe_api_url = "https://djtunez-api-xxxx-ew.a.run.app"

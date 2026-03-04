@@ -39,16 +39,6 @@ variable "prod_frontend_hostname" {
   type        = string
 }
 
-variable "stripe_return_url" {
-  description = "URL Stripe redirects to after onboarding (e.g. https://yourdomain.com/stripe/return)"
-  type        = string
-}
-
-variable "stripe_refresh_url" {
-  description = "URL Stripe redirects to when the onboarding link expires (e.g. https://yourdomain.com/stripe/refresh)"
-  type        = string
-}
-
 variable "expo_public_stripe_api_url" {
   description = "Cloud Run service URL exposed to the Expo client. Leave unset on first apply — get the value from `terraform output cloud_run_url` then re-apply."
   type        = string
