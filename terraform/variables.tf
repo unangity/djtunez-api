@@ -34,6 +34,11 @@ variable "platform_fee_percent" {
   default     = "10"
 }
 
+variable "custom_domain" {
+  description = "Custom domain for the Cloud Run service (e.g. api.reqrave.com). Domain must be verified in Google Search Console first."
+  type        = string
+}
+
 variable "prod_frontend_hostname" {
   description = "Hostname of the frontend app allowed through CORS (e.g. app.yourdomain.com)"
   type        = string

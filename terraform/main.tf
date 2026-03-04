@@ -278,6 +278,26 @@ resource "google_cloud_run_v2_service_iam_member" "public_invoker" {
   member   = "allUsers"
 }
 
+# Custom domain — prerequisites:
+#   1. Verify domain ownership at https://search.google.com/search-console
+#      (add the TXT record your registrar, then verify)
+#   2. terraform apply
+#   3. Add the CNAME record from `terraform output custom_domain_dns` at your registrar
+#   4. SSL is provisioned automatically (~5 min)
+resource "google_cloud_run_domain_mapping" "api" {
+  depends_on = [google_cloud_run_v2_service.api]
+  location   = var.region
+  name       = var.custom_domain
+
+  metadata {
+    namespace = var.project_id
+  }
+
+  spec {
+    route_name = google_cloud_run_v2_service.api.name
+  }
+}
+
 # GitHub Actions secrets — automatically populated after WIF resources are created
 locals {
   # Split "owner/repo" -> "repo"

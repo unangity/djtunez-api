@@ -1,3 +1,8 @@
+output "custom_domain_dns" {
+  description = "Add this CNAME record at your registrar: api.reqrave.com -> <value>"
+  value       = try(google_cloud_run_domain_mapping.api.status[0].resource_records[0].rrdata, "pending — re-run `terraform output` after apply")
+}
+
 output "cloud_run_url" {
   description = "Public URL of the deployed Cloud Run service"
   value       = google_cloud_run_v2_service.api.uri
