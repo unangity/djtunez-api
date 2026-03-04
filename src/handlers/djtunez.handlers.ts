@@ -1,22 +1,22 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { httpStatusMap } from "../utils/http-status-map";
-import { encryptUsername } from "../utils/username";
 import DB from "../db";
 
-export type RegisterBody = { username: string };
+export type RegisterBody = { username: string; stageName: string };
 
 /**
  * POST /api/djtunez/register
  *
  * Called immediately after a DJ creates their Firebase Auth account.
- * Body: { username } — the plain-text username chosen during sign-up.
+ * Body: { username, stageName }
  *
- * Does four things:
+ * Does three things:
  *   1. Checks /usernames/{username} — returns 409 if already taken.
  *   2. Stamps role: 'dj' as a custom claim on the Auth user.
- *   3. Derives the RTDB ID via HMAC-SHA256(username) and seeds
- *      /users/{encryptedId}/profile with { _id, _authId }.
- *   4. Writes /usernames/{username}: true as a flat uniqueness index.
+ *   3. Seeds /users/{username}/profile and writes /usernames/{username}: true.
+ *
+ * The username is used directly as the RTDB key. Access is protected by
+ * RTDB security rules (auth.token.name === $username).
  *
  * Auth: Bearer token in Authorization header (fresh ID token).
  */
@@ -38,7 +38,7 @@ export const register_dj_user = async (
       .send({ error: "Malformed Authorization header" });
   }
 
-  const { username } = request.body ?? {};
+  const { username, stageName } = request.body ?? {};
   if (!username || typeof username !== "string") {
     return reply
       .code(httpStatusMap.badRequest)
@@ -55,14 +55,16 @@ export const register_dj_user = async (
     }
 
     const decoded = await db.auth.verifyToken(token);
-    const encryptedId = encryptUsername(username);
 
     await Promise.all([
       db.auth.setDJRole(decoded.uid),
-      // _id and _authId are internal — never returned in any public response.
-      db.rtdb.ref(`/users/${encryptedId}/profile`).update({
-        _id: encryptedId,
-        _authId: decoded.uid,
+      db.rtdb.ref(`/users/${username}/profile`).update({
+        stageName: stageName ?? "",
+        bio: "",
+        wallpaper: "",
+        rating: 0,
+        currency: "eur",
+        currencySymbol: "€",
       }),
       // Flat index so clients can load all taken usernames in one read.
       db.rtdb.ref(`/usernames/${username}`).set(true),
@@ -78,8 +80,6 @@ export const register_dj_user = async (
 
 const db = new DB();
 
-// ========= types =========
-
 export type EventIdParam = { id: string };
 export type DjUsernameParam = { username: string };
 export type DjUsernameLiveEventParam = { username: string };
@@ -89,22 +89,7 @@ export type DjUsernameLiveEventParam = { username: string };
 /**
  * GET /api/djtunez/event/:id
  *
- * Reads event metadata from RTDB at /events/{id} and returns it shaped
- * as the web-ui's EventProps: { id, djID, location, genres, tracks }.
- *
- * Expected RTDB shape at /events/{id}:
- *   djId: string
- *   name: string
- *   venue: string
- *   city: string
- *   date: string
- *   startTime: string
- *   endTime: string
- *   status: 'upcoming' | 'active' | 'completed'
- *   genres?: string[]
- *   tracks?: string[]
- *   queue/...        (ignored here)
- *   history/...      (ignored here)
+ * Reads event metadata from RTDB at /events/{id}.
  */
 export const get_event = async (
   request: FastifyRequest<{ Params: EventIdParam }>,
@@ -150,12 +135,8 @@ export const get_event = async (
 /**
  * GET /api/djtunez/dj/:username
  *
- * Accepts the DJ's plain-text username from the URL. Derives the RTDB ID
- * via HMAC-SHA256(username) server-side, fetches /users/{encryptedId}/profile,
- * then fetches the Firebase Auth user using the stored _authId.
- *
- * Response merges RTDB profile data with Auth data (displayName as stageName).
- * Neither the encrypted ID nor the Firebase Auth UID is ever sent in the response.
+ * Fetches /users/{username}/profile and returns the DJ data.
+ * auth_id is never sent in the response.
  */
 export const get_dj = async (
   request: FastifyRequest<{ Params: DjUsernameParam }>,
@@ -163,9 +144,8 @@ export const get_dj = async (
 ) => {
   const { username } = request.params;
   try {
-    const encryptedId = encryptUsername(username);
     const snapshot = await db.rtdb
-      .ref(`/users/${encryptedId}/profile`)
+      .ref(`/users/${username}/profile`)
       .once("value");
 
     if (!snapshot.exists()) {
@@ -175,17 +155,9 @@ export const get_dj = async (
     }
 
     const raw = snapshot.val();
-    const authId = raw._authId as string | undefined;
-    if (!authId) {
-      return reply
-        .code(httpStatusMap.notFound)
-        .send({ error: "DJ not found" });
-    }
-
-    const authUser = await db.auth.getUser(authId);
 
     const dj = {
-      stageName: authUser.displayName ?? "",
+      stageName: raw.stageName ?? "",
       bio: raw.bio ?? "",
       cover: raw.wallpaper ?? "",
       ratings: raw.rating ?? 0,
@@ -204,11 +176,8 @@ export const get_dj = async (
 /**
  * GET /api/djtunez/dj/:username/live-event
  *
- * Returns the DJ's current live event — the one event where live === true.
- * Encrypts the username to derive the RTDB ID, reads /users/{encryptedId}/events,
- * and returns the first event with live: true.
- *
- * Response shape is identical to GET /api/djtunez/event/:id.
+ * Returns the DJ's current live event (live === true) from
+ * /users/{username}/events.
  */
 export const get_live_event = async (
   request: FastifyRequest<{ Params: DjUsernameLiveEventParam }>,
@@ -216,11 +185,8 @@ export const get_live_event = async (
 ) => {
   const { username } = request.params;
   try {
-    const encryptedId = encryptUsername(username);
-
-    // Events are stored at /users/{encryptedId}/events/{eventId} by the DJ app.
     const eventsSnap = await db.rtdb
-      .ref(`/users/${encryptedId}/events`)
+      .ref(`/users/${username}/events`)
       .orderByChild("live")
       .equalTo(true)
       .once("value");

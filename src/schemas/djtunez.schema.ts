@@ -12,6 +12,7 @@ export const errorResponseSchema = Joi.object({
 // Lowercase letters, numbers, underscores — 3–30 chars.
 export const registerBodySchema = Joi.object({
   username: Joi.string().min(3).max(30).pattern(/^[a-z0-9_]+$/).required(),
+  stageName: Joi.string().min(1).max(100).required(),
 });
 
 // ========= PARAMS =========

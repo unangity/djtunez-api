@@ -82,8 +82,8 @@ async function onAccountUpdated(account: Stripe.Account) {
   if (!snap.exists()) return;
 
   snap.forEach((child) => {
-    const uid = child.key!;
-    rtdb.ref(`/users/${uid}/stripe/isOnboarded`).set(
+    const djUsername = child.key!;
+    rtdb.ref(`/users/${djUsername}/stripe/isOnboarded`).set(
       account.details_submitted === true
     );
   });

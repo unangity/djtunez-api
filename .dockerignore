@@ -4,4 +4,5 @@
 .git/
 .gitignore
 .vscode/
-/config
+src/node_modules/
+src/dist/

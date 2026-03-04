@@ -2,7 +2,6 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import Stripe from "stripe";
 import DB from "../db";
 import { httpStatusMap } from "../utils/http-status-map";
-
 const db = new DB();
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -20,8 +19,9 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
  *   1. Read stripe accountId + event IDs from RTDB (before any data is wiped)
  *   2. Delete Stripe connected account (if one exists)
  *   3. Delete /events/{eventId} queue/history nodes (keyed by event, not uid)
- *   4. Delete /users/{uid} - profile, stripe, planned events, all-time history
- *   5. Delete Firebase Auth user - revokes all tokens last so RTDB ops stay valid
+ *   4. Delete /users/{encryptedId} - profile, stripe, planned events, all-time history
+ *   5. Delete /usernames/{username} - frees the username for re-use
+ *   6. Delete Firebase Auth user - revokes all tokens last so RTDB ops stay valid
  *
  * The client must call signOut() after this succeeds to clear its local state.
  */
@@ -32,20 +32,29 @@ export const delete_account = async (
   const { uid } = request.authenticatedUser;
 
   try {
-    // Read stripe accountId and event IDs in parallel before touching anything.
-    const stripeSnap = await db.rtdb.ref(`users/${uid}/stripe`).once("value");
+    // Resolve the username from the Auth displayName.
+    const authUser = await db.auth.getUser(uid);
+    const username = authUser.displayName;
 
-    if (stripeSnap.exists() && stripeSnap.val()?.accountId) {
-      const accountId = stripeSnap.val().accountId;
-      try {
-        await stripe.accounts.del(accountId);
-      } catch (err: any) {
-        // Log and swallow Stripe deletion errors since the RTDB + Auth data is already wiped.
-        console.error(`Failed to delete Stripe account ${accountId} for uid=${uid}:`, err);
+    // Read stripe accountId before touching anything.
+    if (username) {
+      const stripeSnap = await db.rtdb.ref(`users/${username}/stripe`).once("value");
+
+      if (stripeSnap.exists() && stripeSnap.val()?.accountId) {
+        const accountId = stripeSnap.val().accountId;
+        try {
+          await stripe.accounts.del(accountId);
+        } catch (err: any) {
+          console.error(`Failed to delete Stripe account ${accountId} for uid=${uid}:`, err);
+        }
       }
+
+      // Wipe all data under /users/{username} (profile, stripe, planned events, history).
+      await db.rtdb.ref(`users/${username}`).remove();
     }
-    // Wipe all data under /users/{uid} (profile, stripe, planned events, history).
-    await db.rtdb.ref(`users/${uid}`).remove();
+
+    // Free the username in the flat uniqueness index.
+    await (username ? db.rtdb.ref(`usernames/${username}`).remove() : Promise.resolve());
 
     // Revoke the Firebase Auth account last so the token stays valid for the
     // RTDB operations above.

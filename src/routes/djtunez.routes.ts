@@ -1,5 +1,5 @@
-import { FastifyInstance, FastifyPluginOptions } from "fastify";
 import Joi from "joi";
+import { FastifyInstance, FastifyPluginOptions } from "fastify";
 import {
   get_event,
   get_dj,
