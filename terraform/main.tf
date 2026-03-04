@@ -197,10 +197,6 @@ resource "google_cloud_run_v2_service" "api" {
         value = "production"
       }
       env {
-        name  = "PORT"
-        value = "8080"
-      }
-      env {
         name  = "GOOGLE_CLOUD_PROJECT"
         value = var.project_id
       }
@@ -265,7 +261,7 @@ resource "google_cloud_run_v2_service" "api" {
   }
 
   traffic {
-    type    = "TRAFFIC_TARGET_TYPE_LATEST"
+    type    = "TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST"
     percent = 100
   }
 }

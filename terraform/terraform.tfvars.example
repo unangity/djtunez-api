@@ -2,8 +2,9 @@
 project_id = "djtunez"
 region     = "europe-west1"
 
-# Placeholder — overridden by the workflow on every deploy
-image = "europe-west1-docker.pkg.dev/djtunez/djtunez-api/api:latest"
+# Used only on first apply to bootstrap the Cloud Run service.
+# After the first CI deploy (push to main), remove this line.
+image = "gcr.io/cloudrun/hello:latest"
 
 # GitHub
 # Generate at https://github.com/settings/tokens — needs 'repo' scope
