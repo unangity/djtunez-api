@@ -27,7 +27,6 @@ export default class Auth {
 
   async getUsers(identifiers: UserIdentifier[]) {
     const users = await this._auth.getUsers(identifiers);
-    // TODO: Get user from supabase
     return users;
   }
 
