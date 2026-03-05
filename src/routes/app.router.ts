@@ -5,6 +5,7 @@ import paymentRoutes from "./payment.routes";
 import stripeRoutes from "./stripe.routes";
 import userRoutes from "./user.routes";
 import webhookRoutes from "./webhook.routes";
+import contactRoutes from "./contact.routes";
 import { djRoutes } from "../hooks/role.access";
 import {
   joiSchemaCompiler,
@@ -39,6 +40,7 @@ export default (
   router.register(publicScope((s) => s.register(djtunezRoutes)), { prefix: "/reqrave" });
   router.register(publicScope((s) => s.register(spotifyRoutes)), { prefix: "/spotify" });
   router.register(publicScope((s) => s.register(paymentRoutes)), { prefix: "/payment" });
+  router.register(publicScope((s) => s.register(contactRoutes)), { prefix: "/contact" });
   // Webhook routes skip the Joi compilers - raw Buffer body, no schema validation.
   router.register(webhookRoutes, { prefix: "/webhooks" });
 

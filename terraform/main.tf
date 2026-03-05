@@ -119,6 +119,7 @@ locals {
     "stripe_webhook_secret",
     "spotify_client_id",
     "spotify_client_secret",
+    "smtp_password",
   ]
 }
 
@@ -147,6 +148,7 @@ resource "google_secret_manager_secret_version" "secret_versions" {
     stripe_webhook_secret = var.stripe_webhook_secret
     spotify_client_id     = var.spotify_client_id
     spotify_client_secret = var.spotify_client_secret
+    smtp_password         = var.smtp_password
   }
 
   secret      = google_secret_manager_secret.secrets[each.key].id
@@ -208,6 +210,22 @@ resource "google_cloud_run_v2_service" "api" {
         name  = "PROD_FRONTEND_HOSTNAME"
         value = var.prod_frontend_hostname
       }
+      env {
+        name  = "SMTP_HOST"
+        value = var.smtp_host
+      }
+      env {
+        name  = "SMTP_PORT"
+        value = var.smtp_port
+      }
+      env {
+        name  = "SMTP_USER"
+        value = var.smtp_user
+      }
+      env {
+        name  = "CONTACT_RECIPIENT"
+        value = var.contact_recipient
+      }
       # Omitted on first apply (Cloud Run URL unknown). After first apply:
       #   1. terraform output cloud_run_url
       #   2. Add expo_public_stripe_api_url = "<url>" to terraform.tfvars
@@ -253,6 +271,15 @@ resource "google_cloud_run_v2_service" "api" {
         value_source {
           secret_key_ref {
             secret  = google_secret_manager_secret.secrets["spotify_client_secret"].secret_id
+            version = "latest"
+          }
+        }
+      }
+      env {
+        name = "SMTP_PASSWORD"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.secrets["smtp_password"].secret_id
             version = "latest"
           }
         }

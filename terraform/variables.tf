@@ -76,3 +76,32 @@ variable "spotify_client_secret" {
   type        = string
   sensitive   = true
 }
+
+variable "smtp_password" {
+  description = "SMTP account password used to send contact form emails"
+  type        = string
+  sensitive   = true
+}
+
+# Plain Cloud Run env vars for email
+
+variable "smtp_user" {
+  description = "SMTP sender email address (e.g. noreply@reqrave.com)"
+  type        = string
+}
+
+variable "smtp_host" {
+  description = "SMTP server hostname (e.g. smtp.gmail.com)"
+  type        = string
+}
+
+variable "smtp_port" {
+  description = "SMTP server port"
+  type        = string
+  default     = "587"
+}
+
+variable "contact_recipient" {
+  description = "Email address that receives contact form submissions"
+  type        = string
+}
