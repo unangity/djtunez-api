@@ -82,7 +82,7 @@ server.register(cors, {
 });
 
 if (process.env.NODE_ENV === "production") {
-  host = process.env.EXPO_PUBLIC_STRIPE_API_URL || `https://${process.env.GOOGLE_CLOUD_PROJECT}.a.run.app`;
+  host = process.env.EXPO_PUBLIC_STRIPE_API_URL || 'https://api.reqrave.com';
 }
 
 server.get("/health", async (request, reply) => {

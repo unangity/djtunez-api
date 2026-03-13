@@ -226,16 +226,9 @@ resource "google_cloud_run_v2_service" "api" {
         name  = "CONTACT_RECIPIENT"
         value = var.contact_recipient
       }
-      # Omitted on first apply (Cloud Run URL unknown). After first apply:
-      #   1. terraform output cloud_run_url
-      #   2. Add expo_public_stripe_api_url = "<url>" to terraform.tfvars
-      #   3. terraform apply
-      dynamic "env" {
-        for_each = var.expo_public_stripe_api_url != null ? [var.expo_public_stripe_api_url] : []
-        content {
-          name  = "EXPO_PUBLIC_STRIPE_API_URL"
-          value = env.value
-        }
+      env {
+        name  = "EXPO_PUBLIC_STRIPE_API_URL"
+        value = "https://api.reqrave.com"
       }
 
       #  Secrets from Secret Manager

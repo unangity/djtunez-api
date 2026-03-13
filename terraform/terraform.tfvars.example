@@ -23,7 +23,6 @@ spotify_client_secret = ""
 # platform_fee_percent  = "10"
 custom_domain          = "api.reqrave.com"
 prod_frontend_hostname = "reqrave.com"
-expo_public_stripe_api_url = "https://api.reqrave.com"
 
 # Email (contact form)
 smtp_host         = ""

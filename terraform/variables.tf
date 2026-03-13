@@ -44,13 +44,6 @@ variable "prod_frontend_hostname" {
   type        = string
 }
 
-variable "expo_public_stripe_api_url" {
-  description = "Cloud Run service URL exposed to the Expo client. Leave unset on first apply — get the value from `terraform output cloud_run_url` then re-apply."
-  type        = string
-  default     = null
-  nullable    = true
-}
-
 # Secret Manager secret values 
 
 variable "stripe_secret_key" {
